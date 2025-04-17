@@ -1,0 +1,10 @@
+================================================
+Bienvenue sur le lisez moi du script SSGWS - ScriptSuperGenialWindowsServer
+
+Ce script permet d'installer et de configuré l'Active Directory et d'autres fonctionnalités Windows Server
+
+L'auteur du script : Corentin Dekeyne 
+Version : 0.3
+
+Le SSGWS script est ma propriété ne le copier pas et ne le vendez pas
+================================================

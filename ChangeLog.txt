@@ -1,0 +1,24 @@
+Version 0.1 :
+- Création du script et des write-host
+- Création des instruction et de certaine variable
+
+Version 0.2 :
+- Ajout de la possibilité de renommer le serveur
+
+Version 0.3 :
+- Ajout de l'installation de ADDS et DNS
+- Configuration de l'active directory
+
+Version 0.4 :
+- Ajout de la possibilité de changer l'IP en statique
+- Ajout de la création d'utilisateurs automatique (pour du Testing)
+- Ajout de la création d'un utilisateurs
+- Sécurisation de l'entrée du mots de passe
+- Ajout de la création d'OU et de group automatique (pour du testing)
+- Ajout de la création d'OU et de group
+
+Version 0.5 :
+- Segmentation des partie testing et basic
+- Correction des fautes
+- Correction des bug éventuels ?
+- Ajout de fonctionnalité.
