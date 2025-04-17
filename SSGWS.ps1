@@ -136,12 +136,6 @@ While ($continue)
     $NoRebootOnCompletion = $false
     $mdpADConvert = ConvertFrom-SecureString $mdpAD
 
-    $VariablesToClean = @("$domaineNom", "$domaineNetBios", "$mdpAD", "$NTDSPath", "$LogPath", "$SysvolPath", "$DomainMode", "$InstallDNS", "$ForestMode", "$NoRebootOnCompletion")
-
-    foreach ($variable in $VariablesToClean) {
-    $variable = $variable -replace '[^\w\s]', ''
-    }
-
     Install-ADDSForest -CreateDnsDelegation:$CreateDnsDelegation `
     -DomainName $domaineNom `
     -DatabasePath $NTDSPath `
@@ -190,7 +184,6 @@ While ($continue)
     $userOU = Read-Host "Dans qu'elle OU l'utilisateur doit être placer"
     $lastNameUser = Read-Host "Donner le nom"
     $firstNameUser = Read-Host "Donner le prénom"
-    $nameCompletUser = $nameUser + " " + $lastNameUser
     $telephoneNumber = Read-Host "Numéro de téléphone"
     $desktopUser = Read-Host "Bureau"
     $organisationUser = Read-Host "Entreprise"
@@ -221,34 +214,34 @@ While ($continue)
         param (
             [string]$domainUser
         )
-        if ($domaineUser -notmatch "\.") {
+        if ($domainUser -notmatch "\.") {
             return "Format invalide, merci de bien rentrée votre domaine entier"
         }
-        $domaineSeparation = $domaineUser -split '\.'
+        $domaineSeparation = $domainUser -split '\.'
         if ($domaineSeparation.Count -ne 2) {
             return "Format invalide, merci de bien rentrée votre domaine entier"
         }
         return "DC=$($domaineSeparation[0]),DC=$($domaineSeparation[1])"
         }
-        $domainUserDC = Convert-DomainTransform -domaine $domaineUser
+        $domainUserDC = Convert-DomainTransform -domaine $domainUser
 
-        $username = "$($firstNameUser.Substring(0,1)).$lastNameUser"
-        $usernamePrincipal = "$username"+"@"+"$domainEmail"
+        $username = "$firstNameUser+"."+$lastNameUser"
+        $usernamePrincipal = "$username"+"@"+"$domainUser"
 
     New-ADUser -SamAccountName ("$username") -UserPrincipalName ("$usernamePrincipal") `
     -GivenName ("$firstNameUser") -Surname ("$lastNameUser") -Name ($firstNameUser + " " + $lastNameUser) `
-    -Path ("OU=$ou,$domainPath")`
+    -Path ("OU=$userOU,$domainUserDC")`
     -OfficePhone ($telephoneNumber).ToLower() `
     -DisplayName ("$firstNameUser $lastNameUser") `
     -EmailAddress ("$EmailAddress").ToLower() `
-    -Title ("$titre") `
-    -Company ("$organisation") `
-    -Office ("$bureau").ToLower() `
-    -Department ("$service") `
-    -StreetAddress ("$rue") `
-    -City ("$ville") `
-    -State ("$departement") `
-    -PostalCode ("$codePostal") `
+    -Title ("$titreUser") `
+    -Company ("$organisationUser") `
+    -Office ("$desktopUser").ToLower() `
+    -Department ("$serviceUser") `
+    -StreetAddress ("$addressUser") `
+    -City ("$cityUser") `
+    -State ("$stateUser") `
+    -PostalCode ("$postalcodeUser") `
     -AccountPassword (Read-Host -AsSecureString "Mots de passe ?") `
     -Enabled $true
 
