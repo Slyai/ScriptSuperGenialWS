@@ -1,4 +1,4 @@
-﻿# ScriptSuperGenialWS SSGWS par Corentin Dekeyne - V0.3
+﻿# ScriptSuperGenialWS SSGWS par Corentin Dekeyne - V0.3.5
 # SI le script et en test merci de commenter les commande de verification ADM
 function admin {
     $currentUser = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -136,6 +136,11 @@ While ($continue)
     $NoRebootOnCompletion = $false
     $mdpADConvert = ConvertFrom-SecureString $mdpAD
 
+    $VariablesToClean = @("$domaineNom", "$domaineNetBios", "$mdpAD", "$NTDSPath", "$LogPath", "$SysvolPath", "$DomainMode", "$InstallDNS", "$ForestMode", "$NoRebootOnCompletion")
+
+    foreach ($variable in $VariablesToClean) {
+    $variable = $variable -replace '[^\w\s]', ''
+    }
 
     Install-ADDSForest -CreateDnsDelegation:$CreateDnsDelegation `
     -DomainName $domaineNom `
@@ -155,7 +160,7 @@ While ($continue)
     Write-Host "Avant tout merci de vous assuré que votre AD et installer sur votre serveur"
     $domaineOU = Read-Host "Veuillez entrer le domaine (au format domaine.tld)"
 
-    function Domaine-Transform {
+    function Convert-DomainTransform {
     param (
         [string]$domaineOU
     )
@@ -168,7 +173,7 @@ While ($continue)
     }
     return "DC=$($domaineSeparation[0]),DC=$($domaineSeparation[1])"
     }
-    $domaineTLDOU = Domaine-Transform -domaine $domaineOU
+    $domaineTLDOU = Convert-DomainTransform -domaine $domaineOU
     $nomOU = Read-Host "Entrée le nom de votre OU"
 
     New-ADOrganizationalUnit -Name $nomOU -Path $domaineTLDOU -ProtectedFromAccidentalDeletion $True 
@@ -179,12 +184,73 @@ While ($continue)
 
     5{
     Write-Host "Cette partie et un peux longue, pour plus de facilité utiliser un fichier Excel ou TXT pour l'importer avec le choix 8"
-    Write-Host ""-ForegroundColor Yellow
+    Write-Host "Si un champs n'est pas remplissable laissez le vide"-ForegroundColor Yellow
+    $domainUser = Read-Host "Domaine de l'AD"
+    $domainEmail = Read-Host "Entrée le domaine pour le mail (souvent le même que celui de l'AD)"
     $userOU = Read-Host "Dans qu'elle OU l'utilisateur doit être placer"
-    $nameUser = Read-Host "Donner le nom"
-    $lastNameUser = Read-Host "Donner le prénom"
+    $lastNameUser = Read-Host "Donner le nom"
+    $firstNameUser = Read-Host "Donner le prénom"
     $nameCompletUser = $nameUser + " " + $lastNameUser
     $telephoneNumber = Read-Host "Numéro de téléphone"
+    $desktopUser = Read-Host "Bureau"
+    $organisationUser = Read-Host "Entreprise"
+    $titleUser = Read-Host "Fonction"
+    $serviceUser = Read-Host "Service"
+    $addressUser = Read-Host "Rue"
+    $cityUser = Read-Host "Ville"
+    $stateUser = Read-Host "Departement ou Région"
+    $postalcodeUser = Read-Host "Code postal"
+    $EmailOption = Read-Host "Voulez-vous générer un email automatiquement (A) ou le saisir manuellement (M)?"
+
+    $VariablesToClean = @("$domainUser", "$domainEmail", "$userOU", "$lastNameUser", "$firstNameUser", "$nameCompletUser", "$telephoneNumber", "$desktopUser", "$organisationUser", "$titleUser", "$serviceUser", "$addressUser", "$cityUser", "$stateUser", "$postalcodeUser", "$EmailOption")
+
+    foreach ($variable in $VariablesToClean) {
+    $variable = $variable -replace '[^\w\s]', ''
+    }
+
+    if ($EmailOption -eq "A") {
+        $EmailAddress = $firstNameUser+"."+$lastNameUser+"@"+$domainEmail
+    } elseif ($EmailOption -eq "M") {
+        $EmailAddress = Read-Host "Entrez l'adresse mail"
+    } else {
+        Write-Host "Option Invalide"-ForegroundColor Yellow
+        return
+    }
+
+    function Convert-DomainTransform {
+        param (
+            [string]$domainUser
+        )
+        if ($domaineUser -notmatch "\.") {
+            return "Format invalide, merci de bien rentrée votre domaine entier"
+        }
+        $domaineSeparation = $domaineUser -split '\.'
+        if ($domaineSeparation.Count -ne 2) {
+            return "Format invalide, merci de bien rentrée votre domaine entier"
+        }
+        return "DC=$($domaineSeparation[0]),DC=$($domaineSeparation[1])"
+        }
+        $domainUserDC = Convert-DomainTransform -domaine $domaineUser
+
+        $username = "$($firstNameUser.Substring(0,1)).$lastNameUser"
+        $usernamePrincipal = "$username"+"@"+"$domainEmail"
+
+    New-ADUser -SamAccountName ("$username") -UserPrincipalName ("$usernamePrincipal") `
+    -GivenName ("$firstNameUser") -Surname ("$lastNameUser") -Name ($firstNameUser + " " + $lastNameUser) `
+    -Path ("OU=$ou,$domainPath")`
+    -OfficePhone ($telephoneNumber).ToLower() `
+    -DisplayName ("$firstNameUser $lastNameUser") `
+    -EmailAddress ("$EmailAddress").ToLower() `
+    -Title ("$titre") `
+    -Company ("$organisation") `
+    -Office ("$bureau").ToLower() `
+    -Department ("$service") `
+    -StreetAddress ("$rue") `
+    -City ("$ville") `
+    -State ("$departement") `
+    -PostalCode ("$codePostal") `
+    -AccountPassword (Read-Host -AsSecureString "Mots de passe ?") `
+    -Enabled $true
 
     } # Fin Users
 
